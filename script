@@ -1,0 +1,141 @@
+import os
+import tkinter as tk
+from tkinter import ttk, messagebox
+from pytube import YouTube  
+
+
+def download_video_youtube(url, resolution, output_dir="."):
+    try:
+        yt = YouTube(url)
+        stream = yt.streams.filter(progressive=True, res=resolution).first() 
+        
+        if not stream:
+            messagebox.showerror("Erreur", "Aucune vidéo avec cette résolution disponible.")
+            return
+        
+        
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+        
+        stream.download(output_path=output_dir)
+        messagebox.showinfo("Succès", "La vidéo a été téléchargée avec succès.")
+    except Exception as e:
+        messagebox.showerror("Erreur", f"Une erreur s'est produite : {e}")
+
+
+def download_video(entry_url, combobox_resolution, combobox_platform):
+    url = entry_url.get()
+    resolution = combobox_resolution.get()
+    platform = combobox_platform.get()
+    if platform == "YouTube":
+        download_video_youtube(url, resolution, output_dir="VIDEO")
+    else:
+        messagebox.showerror("Erreur", "Plateforme non prise en charge.")
+
+
+def authenticate(username, password):
+    return username == "Aiko" and password == "123"
+
+
+def on_login(entry_username, entry_password):
+    username = entry_username.get()
+    password = entry_password.get()
+    
+    if authenticate(username, password):
+        login_window.destroy()  
+        create_main_window()    
+    else:
+        messagebox.showerror("Erreur", "Nom d'utilisateur ou mot de passe incorrect.")
+
+
+def create_main_window():
+    
+    root = tk.Tk()
+    root.title("AIKO SCRIPT")
+    root.geometry("700x300")
+    root.configure(bg="black")  
+    root.resizable(True, True)  
+
+    
+    style = ttk.Style()
+    style.theme_use("clam")
+
+    
+    style.configure("TFrame", background="black")  
+    style.configure("TLabel", background="black", foreground="white")  
+    style.map("TCombobox", fieldbackground=[("readonly", "white")])  
+
+    
+    frame = ttk.Frame(root, borderwidth=2, relief="solid", padding=20)
+    frame.pack(padx=20, pady=20, fill="both", expand=True)
+
+    
+    label_title = ttk.Label(frame, text="AIKO SCRIPT", font=("Helvetica", 24, "bold"))
+    label_title.grid(row=0, column=0, columnspan=2, pady=(0, 20))
+
+    label_url = ttk.Label(frame, text="URL de la vidéo :", font=("Helvetica", 14))
+    label_url.grid(row=1, column=0, padx=5, pady=(5, 10), sticky="w")
+
+    entry_url = ttk.Entry(frame, width=50, font=("Helvetica", 12))
+    entry_url.grid(row=1, column=1, padx=5, pady=(5, 10))
+
+    label_platform = ttk.Label(frame, text="Plateforme :", font=("Helvetica", 14))
+    label_platform.grid(row=2, column=0, padx=5, pady=(10, 5), sticky="w")
+
+    platforms = ["YouTube", "Soon"]
+    combobox_platform = ttk.Combobox(frame, values=platforms, width=15, state="readonly", font=("Helvetica", 12))
+    combobox_platform.grid(row=2, column=1, padx=5, pady=(10, 5))
+
+    label_resolution = ttk.Label(frame, text="Résolution :", font=("Helvetica", 14))
+    label_resolution.grid(row=3, column=0, padx=5, pady=(10, 5), sticky="w")
+
+    resolutions = ["144p", "240p", "360p", "480p", "720p", "1080p"]
+    combobox_resolution = ttk.Combobox(frame, values=resolutions, width=15, state="readonly", font=("Helvetica", 12))
+    combobox_resolution.grid(row=3, column=1, padx=5, pady=(10, 5))
+
+    btn_download = ttk.Button(frame, text="Télécharger", command=lambda: download_video(entry_url, combobox_resolution, combobox_platform), style="Accent.TButton")
+    btn_download.grid(row=4, column=0, columnspan=2, pady=20, sticky="ew")
+
+    
+    frame.grid_columnconfigure(0, weight=1)
+    frame.grid_columnconfigure(1, weight=1)
+
+    
+    style.configure("Accent.TButton", foreground="white", background="#ff5f5f", font=("Helvetica", 14, "bold"), padding=10)
+
+    
+    root.mainloop()
+
+
+login_window = tk.Tk()
+login_window.title("Authentification")
+login_window.geometry("300x200")
+login_window.configure(bg="black")
+
+
+frame = ttk.Frame(login_window, padding=20, style="Auth.TFrame")
+frame.pack(expand=True)
+
+style = ttk.Style()
+
+style.configure("Auth.TFrame", background="black")
+style.configure("Auth.TLabel", background="black", foreground="white")
+style.configure("Auth.TEntry", fieldbackground="white", font=("Helvetica", 12))
+style.map("Auth.TButton", background=[("active", "#ff5f5f")])
+
+label_username = ttk.Label(frame, text="Nom d'utilisateur:", style="Auth.TLabel")
+label_username.grid(row=0, column=0, pady=(0, 5), sticky="w")
+
+entry_username = ttk.Entry(frame, style="Auth.TEntry")
+entry_username.grid(row=1, column=0, padx=5, pady=(0, 10), sticky="we")
+
+label_password = ttk.Label(frame, text="Mot de passe:", style="Auth.TLabel")
+label_password.grid(row=2, column=0, pady=(0, 5), sticky="w")
+
+entry_password = ttk.Entry(frame, show="*")
+entry_password.grid(row=3, column=0, padx=5, pady=(0, 10), sticky="we")
+
+btn_login = ttk.Button(frame, text="Se connecter", command=lambda: on_login(entry_username, entry_password))
+btn_login.grid(row=4, column=0, pady=5, sticky="ew")
+
+login_window.mainloop()
